@@ -69,6 +69,9 @@ func (a App) Exec(_ *kong.Context) error {
 				record := scanner.Record()
 				if record == nil {
 					break
+				} else if len(filters) == 0 {
+					shapes = append(shapes, record.Shape)
+					continue Record
 				}
 
 				for _, field := range record.Fields() {
