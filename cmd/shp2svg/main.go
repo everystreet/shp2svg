@@ -223,7 +223,7 @@ func (c closer) Close() error {
 
 func renderPoint(canvas *svg.SVG, point shp.Point, box shp.BoundingBox, scale float64) {
 	x, y := mapPoint(point.X, point.Y, box, scale)
-	canvas.Circle(x, y, int(math.Max(scale/10, 1)), `fill="red"`)
+	canvas.Circle(x, y, int(math.Max(scale/5, 1)), `fill="red"`)
 }
 
 func renderPolyline(canvas *svg.SVG, polyline shp.Polyline, box shp.BoundingBox, scale float64) {
@@ -253,7 +253,7 @@ func renderPolygon(canvas *svg.SVG, polygon shp.Polygon, box shp.BoundingBox, sc
 func lineStyle(scale float64) []string {
 	return []string{
 		`stroke="black"`,
-		fmt.Sprintf(`stroke-width="%d"`, int(math.Max(scale/100, 1))),
+		fmt.Sprintf(`stroke-width="%d"`, int(math.Max(scale/50, 1))),
 		`fill="white"`,
 		`fill-opacity="0"`,
 	}
