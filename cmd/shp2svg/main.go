@@ -25,7 +25,7 @@ type App struct {
 	Shapefiles  []string `kong:"required,name=shapefiles,short=z,help='Path to zipped shapefiles.'"`
 	Destination string   `kong:"required,type=path,name=destination,short=d,help='Path to destination SVG.'"`
 	Filters     []string `kong:"optional,name=filter,short=f,sep=';',help='Filter expressions.'"`
-	Scale       float64  `kong:"optional,default=1,name=scale-factor,short=s,help='Scale factor.'"`
+	Scale       float64  `kong:"optional,default=100,name=scale-factor,short=s,help='Scale factor.'"`
 }
 
 // Exec runs the command.
