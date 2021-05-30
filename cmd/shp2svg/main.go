@@ -10,6 +10,7 @@ import (
 
 	svg "github.com/ajstarks/svgo"
 	"github.com/alecthomas/kong"
+	"github.com/everystreet/go-proj/v6/proj"
 	"github.com/everystreet/go-shapefile"
 	"github.com/everystreet/go-shapefile/shp"
 )
@@ -24,6 +25,7 @@ func main() {
 type App struct {
 	Shapefiles  []string `kong:"required,name=shapefiles,short=z,help='Path to zipped shapefiles.'"`
 	Destination string   `kong:"required,type=path,name=destination,short=d,help='Path to destination SVG.'"`
+	CRS         string   `kong:"required,name=crs,short=c,default='EPSG:3857',help='Target projection.'"`
 	Filters     []string `kong:"optional,name=filter,short=f,sep=';',help='Filter expressions.'"`
 	Scale       float64  `kong:"optional,default=1000,name=scale-factor,short=s,help='Scale factor.'"`
 }
@@ -117,6 +119,30 @@ func (a App) Exec(_ *kong.Context) error {
 		}
 	}()
 
+	if err := proj.CRSToCRS("+proj=latlong", a.CRS, func(pj proj.Projection) {
+		for i := 0; i < len(shapes); i++ {
+			switch v := shapes[i].(type) {
+			case shp.Point:
+				projectPoint(pj, &v)
+				shapes[i] = v
+			case shp.Polyline:
+				projectBoundingBox(pj, &v.BoundingBox)
+				for j := 0; j < len(v.Parts); j++ {
+					projectPoints(pj, v.Parts[j])
+				}
+				shapes[i] = v
+			case shp.Polygon:
+				projectBoundingBox(pj, &v.BoundingBox)
+				for j := 0; j < len(v.Parts); j++ {
+					projectPoints(pj, v.Parts[j])
+				}
+				shapes[i] = v
+			}
+		}
+	}); err != nil {
+		return fmt.Errorf("failed to project shapes: %w", err)
+	}
+
 	box := shapes.BoundingBox()
 
 	canvas := createCanvas(f, box, a.Scale)
@@ -133,6 +159,28 @@ func (a App) Exec(_ *kong.Context) error {
 		}
 	}
 	return nil
+}
+
+func projectPoint(pj proj.Projection, point *shp.Point) {
+	proj.TransformForward(pj, (*proj.XY)(&point.Point))
+}
+
+func projectPoints(pj proj.Projection, points []shp.Point) {
+	for i := 0; i < len(points); i++ {
+		proj.TransformForward(pj, (*proj.XY)(&points[i].Point))
+	}
+}
+
+func projectBoundingBox(pj proj.Projection, box *shp.BoundingBox) {
+	coord := proj.XY{X: box.MinX, Y: box.MinY}
+	proj.TransformForward(pj, &coord)
+	box.MinX = coord.X
+	box.MinY = coord.Y
+
+	coord = proj.XY{X: box.MaxX, Y: box.MaxY}
+	proj.TransformForward(pj, &coord)
+	box.MaxX = coord.X
+	box.MaxY = coord.Y
 }
 
 type filter struct {
