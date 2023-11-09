@@ -4,7 +4,7 @@ A tool to convert shapefiles to SVG.
 
 ## Installation
 
-1) [Download and install Go](https://golang.org/dl/); then,
+1) [Download and install Go](https://golang.org/dl/) and [proj](https://proj.org/en/9.3/install.html); then,
 2) Run `go install github.com/everystreet/shp2svg/cmd/shp2svg@latest`.
 
 ## Usage
